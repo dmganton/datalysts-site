@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Authorisation | The Datalysts</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="mark" href="../" aria-label="The Datalysts home">D</a>
+  <a class="brand" href="../">The Datalysts</a>
+  <nav><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../data-deletion/">Data deletion</a></nav>
+</header>
+<main>
+<h1>Authorisation received</h1>
+<p>You can close this page. If you were asked to copy the code shown below, paste it into the setup script.</p>
+<p><code id="code" style="word-break:break-all">No code in this address.</code></p>
+<script>
+  try {
+    var p = new URLSearchParams(location.search);
+    var c = p.get("code"), e = p.get("error");
+    var el = document.getElementById("code");
+    if (c) el.textContent = c; else if (e) el.textContent = "Error: " + e + " " + (p.get("error_description") || "");
+  } catch (err) {}
+</script>
+</main>
+<footer>The Datalysts is run by Anton Di Meglio. Contact: <a href="mailto:dimeglio.anton@gmail.com">dimeglio.anton@gmail.com</a></footer>
+</div>
+</body>
+</html>
