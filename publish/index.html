@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Publisher | The Datalysts</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .wrap { max-width: 880px; }
+  .ui { font: 400 15px/1.5 "Libre Franklin", Arial, sans-serif; }
+  .card { border: 1px solid var(--rule); padding: 20px; margin: 0 0 20px; }
+  .muted { color: var(--muted); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .grid { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  video { width: 100%; background: #000; aspect-ratio: 9 / 16; }
+  label.blk { display: block; font-weight: 600; margin: 14px 0 6px; }
+  textarea, select, input[type=password] {
+    width: 100%; font: inherit; padding: 8px; border: 1px solid var(--rule);
+    background: var(--surface); color: var(--ink); box-sizing: border-box;
+  }
+  textarea { min-height: 150px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
+  .check input { margin-top: 4px; }
+  .check.disabled { color: var(--muted); }
+  button {
+    font: 600 15px/1 "Libre Franklin", Arial, sans-serif; padding: 11px 18px;
+    border: 0; background: var(--red); color: #fff; cursor: pointer;
+  }
+  button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--rule); }
+  .status { padding: 10px 12px; border-left: 3px solid var(--red); background: color-mix(in srgb, var(--rule) 35%, transparent); margin: 12px 0; }
+  .status.ok { border-left-color: #2e7d32; }
+  .pill { display: inline-block; font-size: 12px; padding: 2px 8px; border: 1px solid var(--rule); border-radius: 999px; }
+  .hidden { display: none !important; }
+  h2 { margin-top: 0; }
+  small { font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="mark" href="../" aria-label="The Datalysts home">D</a>
+  <a class="brand" href="../">The Datalysts</a>
+  <nav><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a></nav>
+</header>
+<main class="ui">
+  <h1>Publisher</h1>
+  <p class="meta">Internal tool. Review each video and publish it to The Datalysts' TikTok account.</p>
+
+  <section class="card" id="setup">
+    <h2>1. Access</h2>
+    <p class="muted">This page reads the publishing queue from The Datalysts' private repository. The access key stays in this browser only.</p>
+    <label class="blk" for="pat">GitHub access key</label>
+    <div class="row">
+      <input type="password" id="pat" autocomplete="off" placeholder="github_pat_..." style="flex:1">
+      <button id="savePat" class="secondary">Save</button>
+      <button id="forget" class="secondary">Forget</button>
+    </div>
+    <div id="setupStatus"></div>
+  </section>
+
+  <section class="card hidden" id="account">
+    <h2>2. TikTok account</h2>
+    <div class="row" id="creator"></div>
+    <p class="muted" id="creatorNote"></p>
+    <div class="row">
+      <button id="connect" class="secondary">Connect TikTok account</button>
+      <button id="refreshInfo" class="secondary">Refresh account info</button>
+    </div>
+    <div id="accountStatus"></div>
+  </section>
+
+  <section class="card hidden" id="queue">
+    <h2>3. Videos to post</h2>
+    <label class="blk" for="item">Video</label>
+    <select id="item"></select>
+
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <video id="preview" controls playsinline></video>
+        <small class="muted" id="duration"></small>
+      </div>
+      <div>
+        <p class="muted" id="postingAs"></p>
+        <label class="blk" for="title">Caption</label>
+        <textarea id="title" maxlength="2200"></textarea>
+        <small class="muted"><span id="count">0</span> / 2200</small>
+
+        <label class="blk" for="privacy">Who can view this video</label>
+        <select id="privacy"><option value="" selected disabled>Choose</option></select>
+
+        <label class="blk">Allow users to</label>
+        <div class="check" id="c-comment"><input type="checkbox" id="allowComment"><label for="allowComment">Comment</label></div>
+        <div class="check" id="c-duet"><input type="checkbox" id="allowDuet"><label for="allowDuet">Duet</label></div>
+        <div class="check" id="c-stitch"><input type="checkbox" id="allowStitch"><label for="allowStitch">Stitch</label></div>
+
+        <label class="blk">Disclosures</label>
+        <div class="check"><input type="checkbox" id="aigc"><label for="aigc">AI-generated content (adds TikTok's AI label)</label></div>
+        <div class="check"><input type="checkbox" id="disclose"><label for="disclose">Disclose video content (promotes a brand, product or service)</label></div>
+        <div id="discloseBox" class="hidden" style="margin-left:24px">
+          <div class="check"><input type="checkbox" id="brandOrganic"><label for="brandOrganic">Your brand: you are promoting yourself or your own business. Labelled "Promotional content".</label></div>
+          <div class="check"><input type="checkbox" id="brandContent"><label for="brandContent">Branded content: you are promoting another brand or a third party. Labelled "Paid partnership".</label></div>
+          <small class="muted" id="discloseHint"></small>
+        </div>
+
+        <p id="consent" class="muted" style="margin-top:16px"></p>
+        <div class="check"><input type="checkbox" id="agree"><label for="agree">I have reviewed this post and agree.</label></div>
+        <div class="row" style="margin-top:12px">
+          <button id="post" disabled>Post to TikTok</button>
+        </div>
+        <div id="postStatus"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>Datalysts Publisher is an internal tool of The Datalysts. <a href="../privacy/">Privacy policy</a> · <a href="../terms/">Terms</a></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var REPO = "dmganton/datalysts-media";
+  var API = "https://api.github.com/repos/" + REPO;
+  var TT_CLIENT_KEY = "sbawmzk5igrrz79z8t";
+  var REDIRECT = "https://thedatalysts.com/publish/";
+  var $ = function (id) { return document.getElementById(id); };
+  var pat = "";
+  var info = null;
+  var items = [];
+  var published = {};
+  var videoUrl = null;
+
+  function store(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function msg(el, text, ok) { $(el).innerHTML = text ? '<div class="status' + (ok ? " ok" : "") + '">' + text + "</div>" : ""; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+
+  function gh(path, opts) {
+    opts = opts || {};
+    var headers = { "Authorization": "Bearer " + pat, "Accept": opts.raw ? "application/vnd.github.raw" : "application/vnd.github+json" };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    return fetch(API + path, { method: opts.method || "GET", headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("GitHub " + r.status + " on " + path);
+        if (opts.blob) return r.blob();
+        if (r.status === 204) return null;
+        return opts.raw ? r.text() : r.json();
+      });
+  }
+  function ghJson(path) { return gh("/contents/" + path + "?ref=main", { raw: true }).then(JSON.parse); }
+
+  function dispatch(action, payload) {
+    return gh("/actions/workflows/tiktok.yml/dispatches", { method: "POST", body: { ref: "main", inputs: { action: action, payload: JSON.stringify(payload || {}) } } });
+  }
+  function waitForAction(action, since, onDone) {
+    var tries = 0;
+    (function poll() {
+      tries += 1;
+      ghJson("state/tiktok_actions.json").then(function (list) {
+        var hit = (list || []).find(function (a) { return a.action === action && a.at > since; });
+        if (hit) return onDone(hit);
+        if (tries > 90) return onDone({ ok: false, detail: "No answer after 15 minutes. Check the TikTok action run on GitHub." });
+        setTimeout(poll, 10000);
+      }).catch(function () { if (tries > 90) onDone({ ok: false, detail: "Could not read the result." }); else setTimeout(poll, 10000); });
+    })();
+  }
+
+  function renderCreator() {
+    if (!info) { $("creator").innerHTML = '<span class="muted">No account info yet. Click "Refresh account info".</span>'; return; }
+    $("creator").innerHTML = (info.creator_avatar_url ? '<img class="avatar" alt="" src="' + esc(info.creator_avatar_url) + '">' : "") +
+      "<div><strong>" + esc(info.creator_nickname || "") + "</strong><br><span class=\"muted\">@" + esc(info.creator_username || "") + "</span></div>";
+    $("creatorNote").textContent = "Account info from " + new Date(info.fetched_at).toLocaleString() + ". Max video length " + info.max_video_post_duration_sec + " s.";
+    $("postingAs").innerHTML = "Posting to <strong>@" + esc(info.creator_username || "") + "</strong> (" + esc(info.creator_nickname || "") + ")";
+    var sel = $("privacy");
+    sel.innerHTML = '<option value="" selected disabled>Choose</option>';
+    var names = { PUBLIC_TO_EVERYONE: "Everyone", MUTUAL_FOLLOW_FRIENDS: "Friends", FOLLOWER_OF_CREATOR: "Followers", SELF_ONLY: "Only me" };
+    (info.privacy_level_options || []).forEach(function (p) {
+      var o = document.createElement("option"); o.value = p; o.textContent = names[p] || p; sel.appendChild(o);
+    });
+    [["comment_disabled", "c-comment", "allowComment"], ["duet_disabled", "c-duet", "allowDuet"], ["stitch_disabled", "c-stitch", "allowStitch"]].forEach(function (x) {
+      var off = !!info[x[0]]; $(x[2]).disabled = off; if (off) $(x[2]).checked = false; $(x[1]).classList.toggle("disabled", off);
+    });
+  }
+
+  function currentItem() { return items.find(function (i) { return i.id === $("item").value; }); }
+
+  function selectItem() {
+    var it = currentItem();
+    if (!it) return;
+    msg("postStatus", "");
+    if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
+    $("preview").removeAttribute("src");
+    gh("/contents/" + it.video + "?ref=main", { raw: true, blob: true }).then(function (b) {
+      videoUrl = URL.createObjectURL(b); $("preview").src = videoUrl;
+    }).catch(function (e) { msg("postStatus", "Could not load the video: " + esc(e.message)); });
+    gh("/contents/" + (it.caption_file || "") + "?ref=main", { raw: true }).then(function (t) {
+      $("title").value = t.trim(); count();
+    }).catch(function () { $("title").value = it.caption || ""; count(); });
+    $("aigc").checked = !!it.ai_generated;
+    $("agree").checked = false; $("disclose").checked = false; $("brandOrganic").checked = false; $("brandContent").checked = false;
+    $("discloseBox").classList.add("hidden");
+    $("privacy").value = "";
+    ["allowComment", "allowDuet", "allowStitch"].forEach(function (id) { $(id).checked = false; });
+    updateConsent(); validate();
+  }
+
+  function count() { $("count").textContent = $("title").value.length; }
+
+  function updateConsent() {
+    var branded = $("disclose").checked && $("brandContent").checked;
+    $("consent").innerHTML = branded
+      ? 'By posting, you agree to TikTok\'s <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener">Branded Content Policy</a> and <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener">Music Usage Confirmation</a>.'
+      : 'By posting, you agree to TikTok\'s <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener">Music Usage Confirmation</a>.';
+    var privOpt = [].find.call($("privacy").options, function (o) { return o.value === "SELF_ONLY"; });
+    if (privOpt) privOpt.disabled = branded;
+    if (branded && $("privacy").value === "SELF_ONLY") $("privacy").value = "";
+    $("discloseHint").textContent = branded ? "Branded content can't be private." :
+      ($("disclose").checked && !$("brandOrganic").checked && !$("brandContent").checked ? "Choose at least one option to disclose." : "");
+  }
+
+  function validate() {
+    var it = currentItem();
+    var dur = $("preview").duration;
+    var tooLong = info && dur && dur > info.max_video_post_duration_sec;
+    $("duration").textContent = dur ? Math.round(dur) + " s" + (tooLong ? " (too long for this account)" : "") : "";
+    var discloseOk = !$("disclose").checked || $("brandOrganic").checked || $("brandContent").checked;
+    var done = it && published[it.id] && published[it.id].tiktok && published[it.id].tiktok.mode === "direct_post" && published[it.id].tiktok.status === "published";
+    $("post").disabled = !(info && it && $("privacy").value && $("agree").checked && discloseOk && !tooLong && !done);
+    if (done) msg("postStatus", 'Already posted: <a href="' + esc(published[it.id].tiktok.permalink) + '" target="_blank" rel="noopener">view on TikTok</a>', true);
+  }
+
+  function loadAll() {
+    msg("setupStatus", "Loading…", true);
+    return Promise.all([
+      gh("/contents/queue?ref=main"),
+      ghJson("state/tiktok_creator_info.json").catch(function () { return null; }),
+      ghJson("state/published.json").catch(function () { return {}; })
+    ]).then(function (r) {
+      published = r[2] || {};
+      info = r[1];
+      var files = (r[0] || []).filter(function (f) { return /\.json$/.test(f.name); });
+      return Promise.all(files.map(function (f) { return ghJson(f.path); })).then(function (list) {
+        items = list.filter(function (i) { return i && i.video && (i.platforms || []).indexOf("tiktok") >= 0; }).sort(function (a, b) { return a.publish_at < b.publish_at ? 1 : -1; });
+        var sel = $("item"); sel.innerHTML = "";
+        items.forEach(function (i) {
+          var t = published[i.id] && published[i.id].tiktok && published[i.id].tiktok.mode === "direct_post" ? " (posted)" : "";
+          var o = document.createElement("option"); o.value = i.id; o.textContent = i.id + t; sel.appendChild(o);
+        });
+        $("account").classList.remove("hidden"); $("queue").classList.remove("hidden");
+        msg("setupStatus", items.length + " videos in the queue.", true);
+        renderCreator(); selectItem();
+      });
+    }).catch(function (e) { msg("setupStatus", "Could not read the queue: " + esc(e.message) + ". Check the access key."); });
+  }
+
+  $("savePat").onclick = function () { pat = $("pat").value.trim(); if (!pat) return; store("dl_pat", pat); $("pat").value = ""; loadAll(); };
+  $("forget").onclick = function () { pat = ""; store("dl_pat", null); location.reload(); };
+
+  $("connect").onclick = function () {
+    var state = Math.random().toString(36).slice(2);
+    store("dl_tt_state", state);
+    location.href = "https://www.tiktok.com/v2/auth/authorize/?client_key=" + TT_CLIENT_KEY +
+      "&scope=user.info.basic,video.publish,video.upload&response_type=code&redirect_uri=" + encodeURIComponent(REDIRECT) + "&state=" + state;
+  };
+  $("refreshInfo").onclick = function () {
+    var since = new Date().toISOString();
+    msg("accountStatus", "Asking TikTok for the account info…", true);
+    dispatch("creator_info", {}).then(function () {
+      waitForAction("creator_info", since, function (r) {
+        if (!r.ok) return msg("accountStatus", "Failed: " + esc(r.detail));
+        ghJson("state/tiktok_creator_info.json").then(function (i) { info = i; renderCreator(); validate(); msg("accountStatus", "Account info updated.", true); });
+      });
+    }).catch(function (e) { msg("accountStatus", esc(e.message)); });
+  };
+
+  ["privacy", "agree", "allowComment", "allowDuet", "allowStitch", "aigc", "brandOrganic", "brandContent"].forEach(function (id) {
+    $(id).addEventListener("change", function () { updateConsent(); validate(); });
+  });
+  $("disclose").addEventListener("change", function () {
+    $("discloseBox").classList.toggle("hidden", !$("disclose").checked);
+    if (!$("disclose").checked) { $("brandOrganic").checked = false; $("brandContent").checked = false; }
+    updateConsent(); validate();
+  });
+  $("title").addEventListener("input", count);
+  $("item").addEventListener("change", selectItem);
+  $("preview").addEventListener("loadedmetadata", validate);
+
+  $("post").onclick = function () {
+    var it = currentItem();
+    var payload = {
+      id: it.id, title: $("title").value, privacy_level: $("privacy").value,
+      allow_comment: $("allowComment").checked, allow_duet: $("allowDuet").checked, allow_stitch: $("allowStitch").checked,
+      brand_organic_toggle: $("disclose").checked && $("brandOrganic").checked,
+      brand_content_toggle: $("disclose").checked && $("brandContent").checked,
+      is_aigc: $("aigc").checked, consent: $("agree").checked
+    };
+    var since = new Date().toISOString();
+    $("post").disabled = true;
+    msg("postStatus", "Sending to TikTok. Processing can take a few minutes; you can keep this page open.", true);
+    dispatch("post", payload).then(function () {
+      waitForAction("post", since, function (r) {
+        if (!r.ok) { msg("postStatus", "TikTok refused the post: " + esc(r.detail)); validate(); return; }
+        published[it.id] = published[it.id] || {}; published[it.id].tiktok = { status: "published", mode: "direct_post", permalink: r.detail.permalink };
+        msg("postStatus", 'Posted. It may take a few minutes to appear on your profile. <a href="' + esc(r.detail.permalink) + '" target="_blank" rel="noopener">Open on TikTok</a>', true);
+      });
+    }).catch(function (e) { msg("postStatus", esc(e.message)); validate(); });
+  };
+
+  pat = load("dl_pat") || "";
+  var q = new URLSearchParams(location.search);
+  if (q.get("code") || q.get("error")) {
+    var code = q.get("code"), err = q.get("error");
+    history.replaceState(null, "", REDIRECT);
+    if (err) msg("accountStatus", "TikTok login cancelled: " + esc(err));
+    else if (q.get("state") !== load("dl_tt_state")) msg("accountStatus", "Login check failed (state mismatch). Try again.");
+    else if (pat) {
+      var since = new Date().toISOString();
+      setTimeout(function () { msg("accountStatus", "Connecting your TikTok account…", true); }, 50);
+      dispatch("connect", { code: code, redirect_uri: REDIRECT }).then(function () {
+        waitForAction("connect", since, function (r) {
+          if (!r.ok) return msg("accountStatus", "Connection failed: " + esc(r.detail));
+          ghJson("state/tiktok_creator_info.json").then(function (i) { info = i; renderCreator(); validate(); });
+          msg("accountStatus", "TikTok account connected.", true);
+        });
+      }).catch(function (e) { msg("accountStatus", esc(e.message)); });
+    }
+  }
+  if (pat) loadAll();
+})();
+</script>
+</body>
+</html>
